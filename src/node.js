@@ -355,7 +355,7 @@ export default class MimeNode {
       // decode "binary" string to an unicode string
       if (!/^utf[-_]?8$/i.test(this.charset)) {
         this.content = convert(str2arr(this._bodyBuffer), this.charset || 'iso-8859-1')
-      } else if (this.contentTransferEncoding && this.contentTransferEncoding.value === 'base64') {
+      } else if (this.contentTransferEncoding && this.contentTransferEncoding.value !== 'quoted-printable') {
         this.content = utf8Str2arr(this._bodyBuffer)
       }
 
