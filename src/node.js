@@ -14,6 +14,7 @@ export default class MimeNode {
 
     this._state = 'HEADER' // Current state, always starts out with HEADER
     this._bodyBuffer = '' // Body buffer
+    this._base64BodyBuffer = '' // Body buffer in base64
     this._lineCount = 0 // Line counter bor the body part
     this._currentChild = false // Active child node (if available)
     this._lineRemainder = '' // Remainder string when dealing with base64 and qp values
@@ -41,7 +42,15 @@ export default class MimeNode {
 
     this.bodystructure = this.childNodes
     .reduce((agg, child) => agg + '--' + this._multipartBoundary + '\n' + child.bodystructure, this.header.join('\n') + '\n\n') +
-    (this._multipartBoundary ? '--' + this._multipartBoundary + '--\n' : '')
+      (this._multipartBoundary ? '--' + this._multipartBoundary + '--\n' : '')
+
+    console.log(this._bodyBuffer)
+  }
+
+  _base64DecodeBodyBuffer () {
+    if (this._base64BodyBuffer) {
+      this._bodyBuffer = base64Decode(this._base64BodyBuffer, this.charset)
+    }
   }
 
   /**
@@ -274,19 +283,7 @@ export default class MimeNode {
     } else {
       switch (this.contentTransferEncoding.value) {
         case 'base64': {
-          let curLine = this._lineRemainder + line.trim()
-
-          if (curLine.length % 4) {
-            this._lineRemainder = curLine.substr(-curLine.length % 4)
-            curLine = curLine.substr(0, curLine.length - this._lineRemainder.length)
-          } else {
-            this._lineRemainder = ''
-          }
-
-          if (curLine.length) {
-            this._bodyBuffer += base64Decode(curLine, this.charset)
-          }
-
+          this._base64BodyBuffer += line
           break
         }
         case 'quoted-printable': {
@@ -317,6 +314,7 @@ export default class MimeNode {
    * Emits a chunk of the body
   */
   _emitBody () {
+    this._base64DecodeBodyBuffer()
     if (this._isMultipart || !this._bodyBuffer) {
       return
     }
@@ -357,7 +355,7 @@ export default class MimeNode {
       // decode "binary" string to an unicode string
       if (!/^utf[-_]?8$/i.test(this.charset)) {
         this.content = convert(str2arr(this._bodyBuffer), this.charset || 'iso-8859-1')
-      } else {
+      } else if (this.contentTransferEncoding && this.contentTransferEncoding.value === 'base64') {
         this.content = utf8Str2arr(this._bodyBuffer)
       }
 

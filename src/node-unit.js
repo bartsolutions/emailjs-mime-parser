@@ -445,20 +445,9 @@ describe('MimeNode tests', function () {
 
       node._lineRemainder = ''
       node._processBodyLine('4pSB4pSB4pSB4pSB4pSB4pSB4pSB4pSB4pSBCuacrOODoeODvOODq+OBr+OAgeODnuOCpOODiuOD')
+      node._base64DecodeBodyBuffer()
 
       expect(node._bodyBuffer).to.equal('━━━━━━━━━\n本メールは、マイナ�')
-    })
-
-    it('should process base64 data', function () {
-      node.contentTransferEncoding = {
-        value: 'base64'
-      }
-
-      node._lineRemainder = 'YW'
-      node._processBodyLine('JjZGV')
-
-      expect(node._lineRemainder).to.equal('ZGV')
-      expect(node._bodyBuffer).to.equal('abc')
     })
 
     it('should process quoted-printable data', function () {
@@ -536,7 +525,7 @@ describe('MimeNode tests', function () {
       node._bodyBuffer = '\xC5\xBE\xC5\xA1'
       node._emitBody()
 
-      expect(node.content).to.deep.equal(new Uint8Array([0xC3, 0x85, 0xC2, 0xBE, 0xC3, 0x85, 0xC2, 0xA1]))
+      expect(node.content).to.deep.equal(new Uint8Array([0xC5, 0xBE, 0xC5, 0xA1]))
       expect(node.charset).to.equal('utf-8')
     })
   })
