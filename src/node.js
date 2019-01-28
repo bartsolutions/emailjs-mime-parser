@@ -1,6 +1,7 @@
 import { pathOr } from 'ramda'
 import timezone from './timezones'
 import { decode, base64Decode, convert, parseHeaderValue, mimeWordsDecode } from 'emailjs-mime-codec'
+import { TextEncoder } from 'text-encoding'
 import parseAddress from 'emailjs-addressparser'
 
 export default class MimeNode {
@@ -356,6 +357,8 @@ export default class MimeNode {
       // decode "binary" string to an unicode string
       if (!/^utf[-_]?8$/i.test(this.charset)) {
         this.content = convert(str2arr(this._bodyBuffer), this.charset || 'iso-8859-1')
+      } else {
+        this.content = utf8Str2arr(this._bodyBuffer)
       }
 
       // override charset for text nodes
@@ -395,3 +398,5 @@ export default class MimeNode {
 }
 
 const str2arr = str => new Uint8Array(str.split('').map(char => char.charCodeAt(0)))
+
+const utf8Str2arr = str => new TextEncoder('utf-8').encode(str)
