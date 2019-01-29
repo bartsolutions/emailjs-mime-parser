@@ -43,8 +43,6 @@ export default class MimeNode {
     this.bodystructure = this.childNodes
     .reduce((agg, child) => agg + '--' + this._multipartBoundary + '\n' + child.bodystructure, this.header.join('\n') + '\n\n') +
       (this._multipartBoundary ? '--' + this._multipartBoundary + '--\n' : '')
-
-    console.log(this._bodyBuffer)
   }
 
   _base64DecodeBodyBuffer () {
