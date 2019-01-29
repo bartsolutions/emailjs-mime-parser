@@ -282,10 +282,28 @@ export default class MimeNode {
       this._currentChild.writeLine(line)
     } else {
       switch (this.contentTransferEncoding.value) {
-        case 'base64': {
-          this._base64BodyBuffer += line
-          break
-        }
+        case 'base64':
+          {
+            if (this.charset !== 'binary') {
+              this._base64BodyBuffer += line
+              break
+            }
+
+            let curLine = this._lineRemainder + line.trim()
+
+            if (curLine.length % 4) {
+              this._lineRemainder = curLine.substr(-curLine.length % 4)
+              curLine = curLine.substr(0, curLine.length - this._lineRemainder.length)
+            } else {
+              this._lineRemainder = ''
+            }
+
+            if (curLine.length) {
+              this._bodyBuffer += base64Decode(curLine, this.charset)
+            }
+
+            break
+          }
         case 'quoted-printable': {
           let curLine = this._lineRemainder + (this._lineCount > 1 ? '\n' : '') + line
           const match = curLine.match(/=[a-f0-9]{0,1}$/i)
